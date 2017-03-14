@@ -20,16 +20,21 @@ var cancelFrame = (function () {
   }
 })()
 
-function resizeListener(e) {
-  var win = e.target || e.srcElement
-  if (win.__resizeRAF__) {
-    cancelFrame(win.__resizeRAF__)
+function resizeListener(element, e) {
+  console.log(element);
+  if (element.__resizeRAF__) {
+    cancelFrame(element.__resizeRAF__)
   }
-  win.__resizeRAF__ = requestFrame(function () {
-    var trigger = win.__resizeTrigger__
-    trigger.__resizeListeners__.forEach(function (fn) {
-      fn.call(trigger, e)
-    })
+  element.__resizeRAF__ = requestFrame(function () {
+    var trigger = element
+    if (!trigger) {
+      debugger;
+    }
+    if (trigger.__resizeListeners__) {
+      trigger.__resizeListeners__.forEach(function (fn) {
+        fn.call(trigger, e)
+      })
+    }
   })
 }
 
@@ -45,14 +50,14 @@ var exports = function exports(element, fn) {
 
   function objectLoad() {
     this.contentDocument.defaultView.__resizeTrigger__ = this.__resizeElement__
-    this.contentDocument.defaultView.addEventListener('resize', resizeListener)
+    this.contentDocument.defaultView.addEventListener('resize', resizeListener.bind(null, element))
   }
 
   if (!element.__resizeListeners__) {
     element.__resizeListeners__ = []
     if (attachEvent) {
       element.__resizeTrigger__ = element
-      element.attachEvent('onresize', resizeListener)
+      element.attachEvent('onresize', resizeListener.bind(null, element))
     } else {
       if (getComputedStyle(element).position === 'static') {
         element.style.position = 'relative'
@@ -61,7 +66,7 @@ var exports = function exports(element, fn) {
       obj.setAttribute('style', 'display: block; position: absolute; top: 0; left: 0; height: 100%; width: 100%; overflow: hidden; pointer-events: none; z-index: -1; opacity: 0;')
       obj.setAttribute('class', 'resize-sensor')
       obj.__resizeElement__ = element
-      obj.onload = objectLoad
+      obj.onload = objectLoad.bind(obj);
       obj.type = 'text/html'
       if (isIE) {
         element.appendChild(obj)
