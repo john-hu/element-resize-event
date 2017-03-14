@@ -21,7 +21,6 @@ var cancelFrame = (function () {
 })()
 
 function resizeListener(element, e) {
-  console.log(element);
   if (element.__resizeRAF__) {
     cancelFrame(element.__resizeRAF__)
   }
